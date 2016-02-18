@@ -14,6 +14,9 @@ if ( ! defined( 'WPINC' ) ) {
   die;
 }
 
+// Requires
+require_once __DIR__ . '/lib/Facebook/autoload.php';
+
 class Globie_Hype_Beast {
 
   public function __construct() {

@@ -25,7 +25,93 @@ class Globie_Hype_Beast {
     add_action( 'wp_ajax_incr_page_views', array( $this, 'incr_page_views_callback' ));
     add_action( 'wp_ajax_nopriv_incr_page_views', array( $this, 'incr_page_views_callback' ));
 
+    add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+    add_action( 'admin_init', array( $this, 'settings_init' ) );
+
   } 
+
+  public function add_admin_menu() {
+    add_options_page(
+      'Globie Hype Beast',
+      'Globie Hype Beast',
+      'manage_options',
+      'globie_hype_beast',
+      array( $this, 'options_page' )
+    );
+  }
+
+  /*
+   *
+   * Register settings, sections and fields
+   *
+   */
+  public function settings_init() {
+    // Add facebook section
+    add_settings_section(
+      'ghypebeast_facebook_section',
+      __( 'Facebook Keys', 'wordpress' ),
+      array( $this, 'settings_facebook_section_callback' ),
+      'ghypebeast_options_page'
+    );
+
+    // Register option: facebook app id
+    register_setting( 'ghypebeast_options_page', 'ghypebeast_settings_fb_app_id' );
+
+    // facebook app id field
+    add_settings_field(
+      'ghypebeast_fb_app_id_field',
+      __( 'App id', 'wordpress' ),
+      array( $this, 'settings_facebook_app_id_field_render' ),
+      'ghypebeast_options_page',
+      'ghypebeast_facebook_section'
+    );
+
+    // Register option: facebook app secret
+    register_setting( 'ghypebeast_options_page', 'ghypebeast_settings_fb_app_secret' );
+
+    // facebook app id field
+    add_settings_field(
+      'ghypebeast_fb_app_secret_field',
+      __( 'App Secret', 'wordpress' ),
+      array( $this, 'settings_facebook_app_secret_field_render' ),
+      'ghypebeast_options_page',
+      'ghypebeast_facebook_section'
+    );
+
+  }
+
+  // App ID field render
+  public function settings_facebook_app_id_field_render() {
+    // Get options saved
+    $facebook_app_id = get_option( 'ghypebeast_settings_fb_app_id' );
+    // Render fields
+    echo "<fieldset>";
+    echo '<label for="ghypebeast_input_facebook" style="width: 100%;"><input type="text" style="width: 100%;" name="ghypebeast_settings_fb_app_id" id="ghypebeast_input_facebook" value="' . $facebook_app_id  . '"></label><br />';
+    echo "</fieldset>";
+  }
+
+  // App Secret field render
+  public function settings_facebook_app_secret_field_render() {
+    // Get options saved
+    $facebook_app_secret = get_option( 'ghypebeast_settings_fb_app_secret' );
+    // Render fields
+    echo "<fieldset>";
+    echo '<label for="ghypebeast_input_facebook" style="width: 100%;"><input type="text" style="width: 100%;" name="ghypebeast_settings_fb_app_secret" id="ghypebeast_input_facebook" value="' . $facebook_app_secret  . '"></label><br />';
+    echo "</fieldset>";
+  }
+
+  public function settings_facebook_section_callback() {
+    echo __( '', 'wordpress' );
+  }
+
+  public function options_page() {
+    echo '<form action="options.php" method="post">';
+    echo '<h2>Globie Hype Beast Options</h2>';
+    settings_fields( 'ghypebeast_options_page' );
+    do_settings_sections( 'ghypebeast_options_page' );
+    submit_button();
+    echo '</form>';
+  }
 
   public function enqueue_scripts() {
     //echo admin_url('admin-ajax.php'); die;

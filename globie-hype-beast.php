@@ -132,9 +132,35 @@ class Globie_Hype_Beast {
 
     $update = update_post_meta($post_id,'ghb_views_count',$count);
   
+    $this->request_facebook_likes($post_id);
     $this->update_hype($post_id);
 
     wp_die();
+  }
+
+  public function request_facebook_likes($post_id) {
+    $app_id = get_option( 'ghypebeast_settings_fb_app_id' );
+    $app_secret = get_option( 'ghypebeast_settings_fb_app_secret' );
+
+    $fb = new Facebook\Facebook([
+      'app_id'  => $app_id,
+      'app_secret' => $app_secret,
+      'default_graph_version' => 'v2.5',
+    ]);
+
+    // Get User ID
+    $user = $facebook->getUser();
+
+    if ($user) {
+      try {
+        // Proceed knowing you have a logged in user who's authenticated.
+        $user_profile = $facebook->api('/me');
+      } catch (FacebookApiException $e) {
+        error_log($e);
+        $user = null;
+      }
+    }
+
   }
 
   public function update_hype($post_id) {
@@ -149,7 +175,6 @@ class Globie_Hype_Beast {
 
     // Sum up
     $hype = $views + $fb_hype + $tw_hype;
-
 
     // Update hype
     update_post_meta($post_id,'ghb_hype',$hype);

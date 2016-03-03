@@ -28,7 +28,7 @@ class Globie_Hype_Beast {
     add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
     add_action( 'admin_init', array( $this, 'settings_init' ) );
 
-  } 
+  }
 
   public function add_admin_menu() {
     add_options_page(
@@ -78,6 +78,40 @@ class Globie_Hype_Beast {
       'ghypebeast_facebook_section'
     );
 
+    // *************************************
+
+    // Add modifier section
+    add_settings_section(
+      'ghypebeast_modifier_section',
+      __( 'Hype value modifiers', 'wordpress' ),
+      array( $this, 'settings_modifier_section_callback' ),
+      'ghypebeast_options_page'
+    );
+
+    // Register option: facebook hype modifier
+    register_setting( 'ghypebeast_options_page', 'ghypebeast_settings_fb_modifier' );
+
+    // facebook hype modifier field
+    add_settings_field(
+      'ghypebeast_fb_modifier',
+      __( 'Facebook Like modifer value', 'wordpress' ),
+      array( $this, 'ghypebeast_settings_fb_modifier_render' ),
+      'ghypebeast_options_page',
+      'ghypebeast_modifier_section'
+    );
+
+    // Register option: twitter hype modifier
+    register_setting( 'ghypebeast_options_page', 'ghypebeast_settings_twitter_modifier' );
+
+    // twitter hype modifier field
+    add_settings_field(
+      'ghypebeast_twitter_modifier',
+      __( 'Twitter Share modifer value', 'wordpress' ),
+      array( $this, 'ghypebeast_settings_twitter_modifier_render' ),
+      'ghypebeast_options_page',
+      'ghypebeast_modifier_section'
+    );
+
   }
 
   // App ID field render
@@ -100,7 +134,31 @@ class Globie_Hype_Beast {
     echo "</fieldset>";
   }
 
+  // Facebook modifier field render
+  public function ghypebeast_settings_fb_modifier_render() {
+    // Get options saved
+    $facebook_modifer = get_option( 'ghypebeast_settings_fb_modifier' );
+    // Render fields
+    echo "<fieldset>";
+    echo '<label for="ghypebeast_settings_fb_modifier" style="width: 100%;"><input type="text" style="width: 100%;" name="ghypebeast_settings_fb_modifier" id="ghypebeast_settings_fb_modifier" value="' . $facebook_modifer  . '"></label><br />';
+    echo "</fieldset>";
+  }
+
+  // Twiter modifier field render
+  public function ghypebeast_settings_twitter_modifier_render() {
+    // Get options saved
+    $twitter_modifer = get_option( 'ghypebeast_settings_twitter_modifier' );
+    // Render fields
+    echo "<fieldset>";
+    echo '<label for="ghypebeast_settings_twitter_modifier" style="width: 100%;"><input type="text" style="width: 100%;" name="ghypebeast_settings_twitter_modifier" id="ghypebeast_settings_twitter_modifier" value="' . $twitter_modifer  . '"></label><br />';
+    echo "</fieldset>";
+  }
+
   public function settings_facebook_section_callback() {
+    echo __( '', 'wordpress' );
+  }
+
+  public function settings_modifier_section_callback() {
     echo __( '', 'wordpress' );
   }
 
@@ -123,7 +181,7 @@ class Globie_Hype_Beast {
     $permalink = $_POST['permalink'];
     $post_id = url_to_postid($permalink);
     $count = get_post_meta($post_id,'ghb_views_count', true);
-    
+
     if (empty($count)) {
       $count = 0;
     }
@@ -131,7 +189,7 @@ class Globie_Hype_Beast {
     $count++;
 
     $update = update_post_meta($post_id,'ghb_views_count',$count);
-  
+
     $this->update_hype($post_id);
 
     wp_die();
@@ -141,19 +199,28 @@ class Globie_Hype_Beast {
     // Get views count
     $views = get_post_meta($post_id,'ghb_views_count', true);
 
-    // Get fb likes from meta 
+    // Get fb likes from meta
     $fb_hype = get_post_meta($post_id,'ghb_fb_likes', true);
 
-    // Get tw likes from meta 
+    // Get tw likes from meta
     $tw_hype = get_post_meta($post_id,'ghb_fb_likes', true);
 
-    // Sum up
-    $hype = $views + $fb_hype + $tw_hype;
+    // Get modifiers
+    $facebook_modifer = get_option( 'ghypebeast_settings_fb_modifier' );
+    if (empty($facebook_modifer)) {
+      $facebook_modifer = 10;
+    }
+    $twitter_modifer = get_option( 'ghypebeast_settings_twitter_modifier' );
+    if (empty($twitter_modifer)) {
+      $twitter_modifer = 10;
+    }
 
+    // Sum up
+    $hype = $views + ($fb_hype * $facebook_modifer) + ($tw_hype * $twitter_modifer);
 
     // Update hype
     update_post_meta($post_id,'ghb_hype',$hype);
-    
+
   }
 
 }

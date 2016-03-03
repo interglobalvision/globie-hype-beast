@@ -195,15 +195,70 @@ class Globie_Hype_Beast {
     wp_die();
   }
 
+  public function get_facebook_data($post_id) {
+    $url = get_permalink($post_id);
+    $query = "select total_count,like_count,comment_count,share_count,click_count from link_stat where url='{$url}'";
+    $call = "https://api.facebook.com/method/fql.query?query=" . rawurlencode($query) . "&format=json";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $call);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $output = curl_exec($ch);
+    curl_close($ch);
+
+    return json_decode($output);
+  }
+
+  // not currently used as needs access tokening
+  public function get_facebook_data_via_API($post_id) {
+
+    $app_id = get_option( 'ghypebeast_settings_fb_app_id' );
+    $app_secret = get_option( 'ghypebeast_settings_fb_app_secret' );
+
+    $facebookSession = new Facebook\Facebook([
+      'app_id'  => $app_id,
+      'app_secret' => $app_secret,
+      'default_graph_version' => 'v2.5',
+    ]);
+
+    $response = $facebookSession->sendRequest(
+      'GET',
+      '/',
+      array (
+        'id' => get_permalink($post_id),
+    ));
+
+    error_log(print_r($response, TRUE));
+
+    $graphObject = $response->getGraphObject();
+
+    error_log(print_r($graphObject, TRUE));
+
+    return($graphObject);
+
+  }
+
+  public function update_facebook_hype($post_id) {
+
+    $data = $this->get_facebook_data($post_id);
+
+    if (!empty($data->total_count)) {
+      update_post_meta($post_id, 'ghb_fb_total_count', $data->total_count);
+    }
+
+  }
+
   public function update_hype($post_id) {
     // Get views count
     $views = get_post_meta($post_id,'ghb_views_count', true);
 
+    $this->update_facebook_hype($post_id);
+
     // Get fb likes from meta
-    $fb_hype = get_post_meta($post_id,'ghb_fb_likes', true);
+    $fb_hype = get_post_meta($post_id,'ghb_fb_total_count', true);
 
     // Get tw likes from meta
-    $tw_hype = get_post_meta($post_id,'ghb_fb_likes', true);
+    $tw_hype = get_post_meta($post_id,'ghb_twitter_shares', true);
 
     // Get modifiers
     $facebook_modifer = get_option( 'ghypebeast_settings_fb_modifier' );

@@ -28,7 +28,7 @@ class Globie_Hype_Beast {
     add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
     add_action( 'admin_init', array( $this, 'settings_init' ) );
 
-  } 
+  }
 
   public function add_admin_menu() {
     add_options_page(
@@ -121,9 +121,10 @@ class Globie_Hype_Beast {
 
   public function incr_page_views_callback() {
     $permalink = $_POST['permalink'];
+    // needs error handling for bad url
     $post_id = url_to_postid($permalink);
     $count = get_post_meta($post_id,'ghb_views_count', true);
-    
+
     if (empty($count)) {
       $count = 0;
     }
@@ -131,7 +132,7 @@ class Globie_Hype_Beast {
     $count++;
 
     $update = update_post_meta($post_id,'ghb_views_count',$count);
-  
+
     $this->update_hype($post_id);
 
     wp_die();
@@ -141,19 +142,18 @@ class Globie_Hype_Beast {
     // Get views count
     $views = get_post_meta($post_id,'ghb_views_count', true);
 
-    // Get fb likes from meta 
+    // Get fb likes from meta
     $fb_hype = get_post_meta($post_id,'ghb_fb_likes', true);
 
-    // Get tw likes from meta 
+    // Get tw likes from meta
     $tw_hype = get_post_meta($post_id,'ghb_fb_likes', true);
 
     // Sum up
     $hype = $views + $fb_hype + $tw_hype;
 
-
     // Update hype
     update_post_meta($post_id,'ghb_hype',$hype);
-    
+
   }
 
 }

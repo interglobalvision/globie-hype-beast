@@ -205,8 +205,9 @@ class Globie_Hype_Beast {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $output = curl_exec($ch);
     curl_close($ch);
-
-    return json_decode($output);
+    
+    $output = json_decode($output);
+    return $output[0];
   }
 
   // not currently used as needs access tokening
@@ -281,5 +282,15 @@ class Globie_Hype_Beast {
 }
 
 $gHPosts = new Globie_Hype_Beast();
+
+function log_me($message) {
+  if (WP_DEBUG === true) {
+    if (is_array($message) || is_object($message)) {
+      error_log(print_r($message, true));
+    } else {
+      error_log($message);
+    }
+  }
+}
 
 ?>

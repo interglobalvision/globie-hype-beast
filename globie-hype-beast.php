@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Globie Hype Beast
  * Plugin URI:
- * Description: Check for popular posts fetching data from facebook, twitter and page views
+ * Description: Check for popular posts fetching data from facebook and page views
  * Version: 1.0.0
  * Author: Interglobal Vision
  * Author URI: http://interglobal.vision
@@ -100,18 +100,6 @@ class Globie_Hype_Beast {
       'ghypebeast_modifier_section'
     );
 
-    // Register option: twitter hype modifier
-    register_setting( 'ghypebeast_options_page', 'ghypebeast_settings_twitter_modifier' );
-
-    // twitter hype modifier field
-    add_settings_field(
-      'ghypebeast_twitter_modifier',
-      __( 'Twitter Share modifer value', 'wordpress' ),
-      array( $this, 'ghypebeast_settings_twitter_modifier_render' ),
-      'ghypebeast_options_page',
-      'ghypebeast_modifier_section'
-    );
-
   }
 
   // App ID field render
@@ -141,16 +129,6 @@ class Globie_Hype_Beast {
     // Render fields
     echo "<fieldset>";
     echo '<label for="ghypebeast_settings_fb_modifier" style="width: 100%;"><input type="text" style="width: 100%;" name="ghypebeast_settings_fb_modifier" id="ghypebeast_settings_fb_modifier" value="' . $facebook_modifer  . '"></label><br />';
-    echo "</fieldset>";
-  }
-
-  // Twiter modifier field render
-  public function ghypebeast_settings_twitter_modifier_render() {
-    // Get options saved
-    $twitter_modifer = get_option( 'ghypebeast_settings_twitter_modifier' );
-    // Render fields
-    echo "<fieldset>";
-    echo '<label for="ghypebeast_settings_twitter_modifier" style="width: 100%;"><input type="text" style="width: 100%;" name="ghypebeast_settings_twitter_modifier" id="ghypebeast_settings_twitter_modifier" value="' . $twitter_modifer  . '"></label><br />';
     echo "</fieldset>";
   }
 
@@ -267,21 +245,14 @@ class Globie_Hype_Beast {
     // Get fb likes from meta
     $fb_hype = get_post_meta($post_id,'ghb_fb_total_count', true);
 
-    // Get tw likes from meta
-    $tw_hype = get_post_meta($post_id,'ghb_twitter_shares', true);
-
     // Get modifiers
     $facebook_modifer = get_option( 'ghypebeast_settings_fb_modifier' );
     if (empty($facebook_modifer)) {
       $facebook_modifer = 10;
     }
-    $twitter_modifer = get_option( 'ghypebeast_settings_twitter_modifier' );
-    if (empty($twitter_modifer)) {
-      $twitter_modifer = 10;
-    }
 
     // Sum up
-    $hype = $views + ($fb_hype * $facebook_modifer) + ($tw_hype * $twitter_modifer);
+    $hype = $views + ($fb_hype * $facebook_modifer);
 
     // Update hype
     update_post_meta($post_id,'ghb_hype',$hype);

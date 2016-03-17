@@ -1,6 +1,6 @@
 console.log('Globie Hype Beast');
 jQuery(document).ready(function($) {
-  if( $('body').hasClass('single') ) {
+  if( $('body').hasClass('single') && !IGV_Hype.isAdmin ) {
     var data = {
       'action': 'incr_page_views',
       'permalink': document.location.href

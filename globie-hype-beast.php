@@ -172,9 +172,18 @@ class Globie_Hype_Beast {
   }
 
   public function enqueue_scripts() {
+    // Check is user is logged
+    $isAdmin = '';
+    if ( current_user_can('administrator') || current_user_can('editor') || current_user_can('author') || current_user_can('contributor') ) {
+      $isAdmin = 1;
+    }
+
     //echo admin_url('admin-ajax.php'); die;
     wp_enqueue_script( 'globie_hype_script', plugin_dir_url( __FILE__ ) . 'globie-hype-beast.js', array( 'jquery' ) );
-    wp_localize_script( 'globie_hype_script', 'IGV_Hype', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+    wp_localize_script( 'globie_hype_script', 'IGV_Hype', array( 
+      'ajaxurl' => admin_url( 'admin-ajax.php' ),
+      'isAdmin' => $isAdmin
+    ) );
   }
 
   public function incr_page_views_callback() {

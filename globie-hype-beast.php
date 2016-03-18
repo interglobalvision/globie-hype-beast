@@ -158,7 +158,7 @@ class Globie_Hype_Beast {
 
     //echo admin_url('admin-ajax.php'); die;
     wp_enqueue_script( 'globie_hype_script', plugin_dir_url( __FILE__ ) . 'globie-hype-beast.js', array( 'jquery' ) );
-    wp_localize_script( 'globie_hype_script', 'IGV_Hype', array( 
+    wp_localize_script( 'globie_hype_script', 'IGV_Hype', array(
       'ajaxurl' => admin_url( 'admin-ajax.php' ),
       'isAdmin' => $isAdmin
     ) );
@@ -166,6 +166,7 @@ class Globie_Hype_Beast {
 
   public function incr_page_views_callback() {
     $permalink = $_POST['permalink'];
+    // needs error handling for bad url
     $post_id = url_to_postid($permalink);
     $count = get_post_meta($post_id,'ghb_views_count', true);
 
@@ -192,7 +193,7 @@ class Globie_Hype_Beast {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $output = curl_exec($ch);
     curl_close($ch);
-    
+
     $output = json_decode($output);
     return $output[0];
   }
@@ -250,7 +251,6 @@ class Globie_Hype_Beast {
     if (empty($facebook_modifer)) {
       $facebook_modifer = 10;
     }
-
     // Sum up
     $hype = $views + ($fb_hype * $facebook_modifer);
 

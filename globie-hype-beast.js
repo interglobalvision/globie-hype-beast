@@ -1,11 +1,18 @@
-console.log('Globie Hype Beast');
-jQuery(document).ready(function($) {
-  if( $('body').hasClass('single') && !IGV_Hype.isAdmin ) {
+console.log('Globie Hype Beast Initiated');
+
+var GlobieHypeBeast = {
+  urlLoaded: function(url) {
     var data = {
       'action': 'incr_page_views',
-      'permalink': document.location.href
+      'permalink': url
     };
-    // We can also pass the url value separately from ajaxurl for front end AJAX implementations
+
     jQuery.post(IGV_Hype.ajaxurl, data);
+  }
+}
+
+jQuery(document).ready(function($) {
+  if( $('body').hasClass('single') && !IGV_Hype.isAdmin ) {
+    GlobieHypeBeast.urlLoaded(document.location.href);
   }
 });

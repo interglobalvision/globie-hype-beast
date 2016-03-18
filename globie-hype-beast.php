@@ -195,7 +195,13 @@ class Globie_Hype_Beast {
     curl_close($ch);
 
     $output = json_decode($output);
-    return $output[0];
+
+    if (count($output) > 0) {
+      return $output[0];
+    } else {
+      return 0;
+    }
+
   }
 
   // not currently used as needs access tokening

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Globie Hype Beast
  * Plugin URI:
- * Description: Check for popular posts fetching data from facebook, twitter and page views
+ * Description: Check for popular posts fetching data from facebook and page views
  * Version: 1.0.0
  * Author: Interglobal Vision
  * Author URI: http://interglobal.vision
@@ -78,6 +78,28 @@ class Globie_Hype_Beast {
       'ghypebeast_facebook_section'
     );
 
+    // *************************************
+
+    // Add modifier section
+    add_settings_section(
+      'ghypebeast_modifier_section',
+      __( 'Hype value modifiers', 'wordpress' ),
+      array( $this, 'settings_modifier_section_callback' ),
+      'ghypebeast_options_page'
+    );
+
+    // Register option: facebook hype modifier
+    register_setting( 'ghypebeast_options_page', 'ghypebeast_settings_fb_modifier' );
+
+    // facebook hype modifier field
+    add_settings_field(
+      'ghypebeast_fb_modifier',
+      __( 'Facebook Like modifer value', 'wordpress' ),
+      array( $this, 'ghypebeast_settings_fb_modifier_render' ),
+      'ghypebeast_options_page',
+      'ghypebeast_modifier_section'
+    );
+
   }
 
   // App ID field render
@@ -100,7 +122,21 @@ class Globie_Hype_Beast {
     echo "</fieldset>";
   }
 
+  // Facebook modifier field render
+  public function ghypebeast_settings_fb_modifier_render() {
+    // Get options saved
+    $facebook_modifer = get_option( 'ghypebeast_settings_fb_modifier' );
+    // Render fields
+    echo "<fieldset>";
+    echo '<label for="ghypebeast_settings_fb_modifier" style="width: 100%;"><input type="text" style="width: 100%;" name="ghypebeast_settings_fb_modifier" id="ghypebeast_settings_fb_modifier" value="' . $facebook_modifer  . '"></label><br />';
+    echo "</fieldset>";
+  }
+
   public function settings_facebook_section_callback() {
+    echo __( '', 'wordpress' );
+  }
+
+  public function settings_modifier_section_callback() {
     echo __( '', 'wordpress' );
   }
 
@@ -114,9 +150,18 @@ class Globie_Hype_Beast {
   }
 
   public function enqueue_scripts() {
+    // Check is user is logged
+    $isAdmin = '';
+    if ( current_user_can('administrator') || current_user_can('editor') || current_user_can('author') || current_user_can('contributor') ) {
+      $isAdmin = 1;
+    }
+
     //echo admin_url('admin-ajax.php'); die;
     wp_enqueue_script( 'globie_hype_script', plugin_dir_url( __FILE__ ) . 'globie-hype-beast.js', array( 'jquery' ) );
-    wp_localize_script( 'globie_hype_script', 'IGV_Hype', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+    wp_localize_script( 'globie_hype_script', 'IGV_Hype_Vars', array(
+      'ajaxurl' => admin_url( 'admin-ajax.php' ),
+      'isAdmin' => $isAdmin
+    ) );
   }
 
   public function incr_page_views_callback() {
@@ -138,18 +183,82 @@ class Globie_Hype_Beast {
     wp_die();
   }
 
+  public function get_facebook_data($post_id) {
+    $url = get_permalink($post_id);
+    $query = "select total_count,like_count,comment_count,share_count,click_count from link_stat where url='{$url}'";
+    $call = "https://api.facebook.com/method/fql.query?query=" . rawurlencode($query) . "&format=json";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $call);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $output = curl_exec($ch);
+    curl_close($ch);
+
+    $output = json_decode($output);
+
+    if (count($output) > 0) {
+      return $output[0];
+    } else {
+      return 0;
+    }
+
+  }
+
+  // not currently used as needs access tokening
+  public function get_facebook_data_via_API($post_id) {
+
+    $app_id = get_option( 'ghypebeast_settings_fb_app_id' );
+    $app_secret = get_option( 'ghypebeast_settings_fb_app_secret' );
+
+    $facebookSession = new Facebook\Facebook([
+      'app_id'  => $app_id,
+      'app_secret' => $app_secret,
+      'default_graph_version' => 'v2.5',
+    ]);
+
+    $response = $facebookSession->sendRequest(
+      'GET',
+      '/',
+      array (
+        'id' => get_permalink($post_id),
+    ));
+
+    error_log(print_r($response, TRUE));
+
+    $graphObject = $response->getGraphObject();
+
+    error_log(print_r($graphObject, TRUE));
+
+    return($graphObject);
+
+  }
+
+  public function update_facebook_hype($post_id) {
+
+    $data = $this->get_facebook_data($post_id);
+
+    if (!empty($data->total_count)) {
+      update_post_meta($post_id, 'ghb_fb_total_count', $data->total_count);
+    }
+
+  }
+
   public function update_hype($post_id) {
     // Get views count
     $views = get_post_meta($post_id,'ghb_views_count', true);
 
+    $this->update_facebook_hype($post_id);
+
     // Get fb likes from meta
-    $fb_hype = get_post_meta($post_id,'ghb_fb_likes', true);
+    $fb_hype = get_post_meta($post_id,'ghb_fb_total_count', true);
 
-    // Get tw likes from meta
-    $tw_hype = get_post_meta($post_id,'ghb_fb_likes', true);
-
+    // Get modifiers
+    $facebook_modifer = get_option( 'ghypebeast_settings_fb_modifier' );
+    if (empty($facebook_modifer)) {
+      $facebook_modifer = 10;
+    }
     // Sum up
-    $hype = $views + $fb_hype + $tw_hype;
+    $hype = $views + ($fb_hype * $facebook_modifer);
 
     // Update hype
     update_post_meta($post_id,'ghb_hype',$hype);
@@ -159,5 +268,15 @@ class Globie_Hype_Beast {
 }
 
 $gHPosts = new Globie_Hype_Beast();
+
+function log_me($message) {
+  if (WP_DEBUG === true) {
+    if (is_array($message) || is_object($message)) {
+      error_log(print_r($message, true));
+    } else {
+      error_log($message);
+    }
+  }
+}
 
 ?>

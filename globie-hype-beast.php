@@ -158,7 +158,7 @@ class Globie_Hype_Beast {
 
     //echo admin_url('admin-ajax.php'); die;
     wp_enqueue_script( 'globie_hype_script', plugin_dir_url( __FILE__ ) . 'globie-hype-beast.js', array( 'jquery' ) );
-    wp_localize_script( 'globie_hype_script', 'IGV_Hype', array(
+    wp_localize_script( 'globie_hype_script', 'IGV_Hype_Vars', array(
       'ajaxurl' => admin_url( 'admin-ajax.php' ),
       'isAdmin' => $isAdmin
     ) );
